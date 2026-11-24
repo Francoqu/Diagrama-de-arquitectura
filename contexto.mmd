@@ -1,0 +1,27 @@
+%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"htmlLabels": true, "nodeSpacing": 40, "rankSpacing": 60}}}%%
+flowchart TB
+  regente(["Regente farmacéutico<br/>[Persona]"])
+  dueno(["Propietario / auxiliar de farmacia<br/>[Persona]"])
+  inspector(["Inspector ARCSA<br/>[Persona]"])
+  fridge[("Refrigeradora de medicamentos<br/>[Entorno físico, 2-8 °C]")]
+  sys["<b>Sistema de registro automático<br/>y auditable de temperatura</b><br/>[Sistema a construir]"]
+  msg["Servicio de mensajería<br/>(Telegram / correo)<br/>[Sistema externo]"]
+  ntp["Servidor de hora NTP<br/>[Sistema externo]"]
+
+  sys -->|"mide la temperatura de"| fridge
+  sys -->|"envía alertas a"| msg
+  msg -->|"entrega el aviso a"| regente
+  msg -->|"entrega el aviso a"| dueno
+  regente -->|"consulta el historial y descarga el reporte de"| sys
+  dueno -->|"consulta el estado de los equipos en"| sys
+  regente -->|"presenta el reporte de incidente a"| inspector
+  sys -->|"pide la hora a"| ntp
+
+  classDef person fill:#dbeafe,stroke:#1e40af,color:#0f172a
+  classDef system fill:#1e40af,stroke:#1e3a8a,color:#ffffff
+  classDef ext fill:#e5e7eb,stroke:#6b7280,color:#111827
+  classDef env fill:#dcfce7,stroke:#166534,color:#052e16
+  class regente,dueno,inspector person
+  class sys system
+  class msg,ntp ext
+  class fridge env

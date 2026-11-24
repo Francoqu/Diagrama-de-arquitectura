@@ -1,0 +1,51 @@
+%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"htmlLabels": true, "nodeSpacing": 40, "rankSpacing": 60}}}%%
+flowchart TB
+  subgraph CEL["Frontera 3: dispositivo del regente (celular o PC)"]
+    nav["Navegador web<br/>[Chrome / Safari]"]
+  end
+
+  subgraph SITIO["Frontera 1: red de la farmacia (Wi-Fi del local)"]
+    fr[("Refrigeradora<br/>[Entorno físico]")]
+    subgraph NODO["Nodo de medición [ESP32-WROOM-32]"]
+      sonda["Sondas de temperatura<br/>[DS18B20, 1-Wire] (S6)"]
+      fw["Firmware: lectura, alarma local y reenvío<br/>[MicroPython 1.23] (S6)"]
+      buf["Buffer local de lecturas<br/>[LittleFS, archivo CSV] (S6)"]
+    end
+  end
+
+  subgraph VM["Frontera 2: VM del grupo (Ubuntu Server 24.04)"]
+    ngx["Proxy inverso y TLS<br/>[Nginx 1.24] (S9)"]
+    api["Plataforma web, API y reporte PDF<br/>[FastAPI + HTML/JS + ReportLab] (S9, reporte S12)"]
+    mq["Broker MQTT<br/>[Mosquitto 2.x] (S6)"]
+    ing["Ingestor y motor de alertas<br/>[Python 3.12 + paho-mqtt] (S6)"]
+    db[("Registro inmutable<br/>[PostgreSQL 16, cadena de hash] (S6, hash S9)")]
+  end
+
+  subgraph EXT["Frontera 4: Internet (terceros)"]
+    msg["Mensajería<br/>[Telegram Bot API / SMTP]"]
+    ntp["Hora<br/>[pool.ntp.org]"]
+  end
+
+  sonda -.- fr
+  fw -->|"F1 lee"| sonda
+  fw -->|"F2 telemetría"| mq
+  fw -->|"F3 estado y Will"| mq
+  fw -->|"F11 hora"| ntp
+  api -->|"F4 configuración"| mq
+  ing -->|"F5 suscripción"| mq
+  ing -->|"F6 registra"| db
+  ing -->|"F7 alertas"| msg
+  nav -->|"F8 consulta"| ngx
+  ngx -->|"F9 reenvía"| api
+  api -->|"F10 consulta"| db
+  fw -.- buf
+
+  classDef boundary fill:#f8fafc,stroke:#334155,stroke-width:2px,stroke-dasharray:2 4
+  classDef future fill:#fff7ed,stroke:#9a3412,stroke-width:2px,stroke-dasharray:8 4,color:#111827
+  classDef exists fill:#e5e7eb,stroke:#374151,stroke-width:2px,color:#111827
+  classDef env fill:#dcfce7,stroke:#166534,stroke-width:2px,color:#052e16
+  class CEL,SITIO,VM,EXT,NODO boundary
+  class sonda,fw,buf,ngx,api,mq,ing,db future
+  class nav,msg,ntp exists
+  class fr env
+  linkStyle 1,2,3,4,5,6,7,8,9,10,11 stroke-dasharray:8 4
